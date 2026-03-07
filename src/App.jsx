@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import UploadZone from "./components/UploadZone"
 import DemoModal from "./components/DemoModal"
 import ClipboardInputZone from "./components/FileInputZone"
@@ -28,6 +28,13 @@ export default function App() {
   const [showDemoModal, setShowDemoModal] = useState(false)
   const [inputMode, setInputMode] = useState('screenshot')
   const [sourceLabel, setSourceLabel] = useState(null)
+  const [carouselIndex, setCarouselIndex] = useState(0)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCarouselIndex(i => (i + 1) % 4)
+    }, 2000)
+    return () => clearInterval(interval)
+  }, [])
 
   async function analyzeImage(file) {
     setImageFile(file)
@@ -232,21 +239,116 @@ export default function App() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {[
-                { label: 'API Keys', desc: 'AWS, Stripe, OpenAI, GitHub', color: '#DC2626', bg: '#FEF2F2' },
-                { label: 'Auth Tokens', desc: 'JWT, OAuth, Sessions', color: '#D97706', bg: '#FFFBEB' },
-                { label: 'Credentials', desc: 'Passwords, DB strings', color: '#7C3AED', bg: '#F5F3FF' },
-                { label: 'PII', desc: 'SSNs, cards, IPs', color: '#0284C7', bg: '#F0F9FF' },
-              ].map(({ label, desc, color, bg }) => (
-                <div key={label} className="bg-white rounded-xl p-3 shadow-sm border border-[#E5E7EB]">
-                  <div className="text-xs font-semibold mb-1" style={{ color }}>{label}</div>
-                  <div className="text-xs text-[#9CA3AF]">{desc}</div>
-                </div>
-              ))}
-            </div>
+            {/* Carousel */}
+            {(() => {
+              const items = [
+                {
+                  label: 'API Keys',
+                  desc: 'Detects AWS, Stripe, OpenAI, GitHub, Google, Anthropic, and Twilio keys with high precision pattern matching.',
+                  color: '#DC2626',
+                  bg: '#FEF2F2',
+                  icon: '🔑',
+                  examples: ['AKIA...', 'sk_live_...', 'sk-proj-...', 'ghp_...'],
+                },
+                {
+                  label: 'Auth Tokens',
+                  desc: 'Identifies JWT secrets, OAuth tokens, SSH private keys, and session tokens that grant unauthorized access.',
+                  color: '#D97706',
+                  bg: '#FFFBEB',
+                  icon: '🪪',
+                  examples: ['JWT_SECRET=...', 'eyJhbGci...', '-----BEGIN RSA...'],
+                },
+                {
+                  label: 'Credentials',
+                  desc: 'Finds plaintext passwords, database connection strings, and hardcoded secrets in config files and code.',
+                  color: '#7C3AED',
+                  bg: '#F5F3FF',
+                  icon: '🛡',
+                  examples: ['postgresql://...', 'password=...', 'DB_PASS=...'],
+                },
+                {
+                  label: 'PII & Infrastructure',
+                  desc: 'Surfaces internal IP addresses, service URLs, email addresses, SSNs, and credit card numbers.',
+                  color: '#0284C7',
+                  bg: '#F0F9FF',
+                  icon: '🌐',
+                  examples: ['192.168.x.x', '10.0.0.x', 'http://internal...'],
+                },
+              ]
 
-            <p className="text-center text-xs text-[#9CA3AF] mt-5">
+              const item = items[carouselIndex]
+
+              return (
+                <div className="bg-white rounded-2xl shadow-sm border border-[#E5E7EB] overflow-hidden">
+                  {/* Tab indicators */}
+                  <div className="flex border-b border-[#E5E7EB]">
+                    {items.map((t, i) => (
+                      <button
+                        key={t.label}
+                        onClick={() => setCarouselIndex(i)}
+                        className="flex-1 py-2.5 text-xs font-medium transition-all"
+                        style={{
+                          color: i === carouselIndex ? t.color : '#9CA3AF',
+                          borderBottom: i === carouselIndex ? `2px solid ${t.color}` : '2px solid transparent',
+                        }}
+                      >
+                        {t.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Content */}
+                  <div
+                    className="p-5 transition-all duration-300"
+                    style={{ backgroundColor: item.bg }}
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-xl shadow-sm shrink-0">
+                        {item.icon}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p
+                          className="font-semibold text-sm mb-1"
+                          style={{ color: item.color }}
+                        >
+                          {item.label}
+                        </p>
+                        <p className="text-xs text-[#6B7280] leading-relaxed mb-3">
+                          {item.desc}
+                        </p>
+                        <div className="flex gap-2 flex-wrap">
+                          {item.examples.map(ex => (
+                            <span
+                              key={ex}
+                              className="text-xs font-mono px-2 py-0.5 bg-white rounded-lg border border-[#E5E7EB] text-[#374151]"
+                            >
+                              {ex}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Progress dots */}
+                    <div className="flex justify-center gap-1.5 mt-4">
+                      {items.map((_, i) => (
+                        <button
+                          key={i}
+                          onClick={() => setCarouselIndex(i)}
+                          className="w-1.5 h-1.5 rounded-full transition-all"
+                          style={{
+                            backgroundColor: i === carouselIndex ? item.color : '#D1D5DB',
+                            transform: i === carouselIndex ? 'scale(1.3)' : 'scale(1)',
+                          }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )
+            })()}
+
+            <p className="text-center text-xs text-[#9CA3AF] mt-4">
               🔒 Processed entirely in your browser — your data never leaves your device
             </p>
           </div>
