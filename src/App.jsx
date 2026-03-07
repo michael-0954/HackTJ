@@ -29,8 +29,12 @@ export default function App() {
   const [inputMode, setInputMode] = useState('screenshot')
   const [sourceLabel, setSourceLabel] = useState(null)
   const [carouselIndex, setCarouselIndex] = useState(0)
+  const [carouselDir, setCarouselDir] = useState('right')
+  const [carouselKey, setCarouselKey] = useState(0)
   useEffect(() => {
     const interval = setInterval(() => {
+      setCarouselDir('right')
+      setCarouselKey(k => k + 1)
       setCarouselIndex(i => (i + 1) % 4)
     }, 2000)
     return () => clearInterval(interval)
@@ -149,6 +153,22 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#F5F6FA]">
+      <style>{`
+        @keyframes slideInRight {
+          from { opacity: 0; transform: translateX(20px); }
+          to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes slideInLeft {
+          from { opacity: 0; transform: translateX(-20px); }
+          to { opacity: 1; transform: translateX(0); }
+        }
+        .slide-in-right {
+          animation: slideInRight 0.3s ease forwards;
+        }
+        .slide-in-left {
+          animation: slideInLeft 0.3s ease forwards;
+        }
+      `}</style>
       {/* Navbar */}
       <nav className="bg-white border-b border-[#E5E7EB] px-8 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -285,7 +305,11 @@ export default function App() {
                     {items.map((t, i) => (
                       <button
                         key={t.label}
-                        onClick={() => setCarouselIndex(i)}
+                        onClick={() => {
+                        setCarouselDir(i > carouselIndex ? 'right' : 'left')
+                        setCarouselKey(k => k + 1)
+                        setCarouselIndex(i)
+                      }}
                         className="flex-1 py-2.5 text-xs font-medium transition-all"
                         style={{
                           color: i === carouselIndex ? t.color : '#9CA3AF',
@@ -299,7 +323,8 @@ export default function App() {
 
                   {/* Content */}
                   <div
-                    className="p-5 transition-all duration-300"
+                    key={carouselKey}
+                    className={`p-5 ${carouselDir === 'right' ? 'slide-in-right' : 'slide-in-left'}`}
                     style={{ backgroundColor: item.bg }}
                   >
                     <div className="flex items-start gap-4">
@@ -334,7 +359,11 @@ export default function App() {
                       {items.map((_, i) => (
                         <button
                           key={i}
-                          onClick={() => setCarouselIndex(i)}
+                          onClick={() => {
+                        setCarouselDir(i > carouselIndex ? 'right' : 'left')
+                        setCarouselKey(k => k + 1)
+                        setCarouselIndex(i)
+                      }}
                           className="w-1.5 h-1.5 rounded-full transition-all"
                           style={{
                             backgroundColor: i === carouselIndex ? item.color : '#D1D5DB',
