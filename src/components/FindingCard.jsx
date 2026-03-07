@@ -73,24 +73,26 @@ export default function FindingCard({ finding, isSelected, onClick, redactEnable
         {finding.remediation}
       </p>
 
-      {/* Redaction toggle */}
-      <div
-        className="flex items-center justify-between pt-2 border-t border-[#F0F0F0]"
-        onClick={handleToggle}
-      >
-        <span className="text-xs text-[#9CA3AF]">Include in redaction</span>
+      {/* Redaction toggle — only show when image is present */}
+      {onToggleRedact && redactEnabled !== undefined && (
         <div
-          className={`relative w-8 h-4 rounded-full transition-colors duration-200 ${
-            redactEnabled ? 'bg-[#0F1117]' : 'bg-[#D1D5DB]'
-          }`}
+          className="flex items-center justify-between pt-2 border-t border-[#F0F0F0]"
+          onClick={handleToggle}
         >
+          <span className="text-xs text-[#9CA3AF]">Include in redaction</span>
           <div
-            className={`absolute top-0.5 w-3 h-3 bg-white rounded-full shadow transition-transform duration-200 ${
-              redactEnabled ? 'translate-x-4' : 'translate-x-0.5'
+            className={`relative w-8 h-4 rounded-full transition-colors duration-200 ${
+              redactEnabled ? 'bg-[#0F1117]' : 'bg-[#D1D5DB]'
             }`}
-          />
+          >
+            <div
+              className={`absolute top-0.5 w-3 h-3 bg-white rounded-full shadow transition-transform duration-200 ${
+                redactEnabled ? 'translate-x-4' : 'translate-x-0.5'
+              }`}
+            />
+          </div>
         </div>
-      </div>
+      )}
 
       {isSelected && (
         <p className="text-xs font-medium mt-2 pt-2 border-t border-[#E5E7EB]"

@@ -107,8 +107,8 @@ export default function FindingsPanel({ findings, selectedFindingId, onSelectFin
             onClick={() => onSelectFinding(
               selectedFindingId === finding.uniqueId ? null : finding.uniqueId
             )}
-            redactEnabled={redactSet.has(finding.uniqueId)}
-            onToggleRedact={handleToggleRedact}
+            redactEnabled={imageFile ? redactSet.has(finding.uniqueId) : undefined}
+            onToggleRedact={imageFile ? handleToggleRedact : undefined}
           />
         ))}
       </div>

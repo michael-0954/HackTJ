@@ -2,6 +2,7 @@ import { useState } from "react"
 
 const CORS_PROXIES = [
   (url) => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
+  (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
 ]
 
 export default function UrlInputZone({ onTextReady }) {
@@ -11,11 +12,18 @@ export default function UrlInputZone({ onTextReady }) {
   const [status, setStatus] = useState(null)
 
   async function fetchUrl(targetUrl) {
-    const proxyUrl = CORS_PROXIES[0](targetUrl)
-    const res = await fetch(proxyUrl)
-    if (!res.ok) throw new Error('Failed to fetch URL.')
-    const data = await res.json()
-    return data.contents || ''
+    for (const proxy of CORS_PROXIES) {
+      try {
+        const res = await fetch(proxy(targetUrl))
+        if (!res.ok) continue
+        const data = await res.json()
+        const content = data.contents || data
+        if (typeof content === 'string' && content.length > 0) return content
+      } catch (e) {
+        continue
+      }
+    }
+    throw new Error('Failed to fetch URL. Make sure it is publicly accessible.')
   }
 
   async function handleScan() {
@@ -103,7 +111,7 @@ export default function UrlInputZone({ onTextReady }) {
         </p>
         <div className="space-y-1">
           {[
-            'https://raw.githubusercontent.com/michael-0954/HackTJ/refs/heads/main/public/demo-config.txt',
+            'https://raw.githubusercontent.com/michael-0954/HackTJ/main/public/demo-config.txt',
           ].map(example => (
             <button
               key={example}
