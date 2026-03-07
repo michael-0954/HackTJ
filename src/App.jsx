@@ -1,6 +1,8 @@
 import { useState } from "react"
 import UploadZone from "./components/UploadZone"
 import DemoModal from "./components/DemoModal"
+import FileInputZone from "./components/FileInputZone"
+import GitInputZone from "./components/GitInputZone"
 import ScanAnimation from "./components/ScanAnimation"
 import AnnotatedImage from "./components/AnnotatedImage"
 import FindingsPanel from "./components/FindingsPanel"
@@ -24,9 +26,12 @@ export default function App() {
   const [error, setError] = useState(null)
   const [imageDimensions, setImageDimensions] = useState(null)
   const [showDemoModal, setShowDemoModal] = useState(false)
+  const [inputMode, setInputMode] = useState('screenshot')
+  const [sourceLabel, setSourceLabel] = useState(null)
 
   async function analyzeImage(file) {
     setImageFile(file)
+    setSourceLabel(file.name)
     // Get natural dimensions
     const url = URL.createObjectURL(file)
     const img = new Image()
@@ -80,6 +85,48 @@ export default function App() {
       setAppState(STATES.ERROR)
     }
   }
+  async function analyzeText(text, sourceLabel) {
+    setAppState(STATES.SCANNING)
+    setProgress(0)
+    setFindings([])
+    setSelectedFindingId(null)
+    setImageFile(null)
+    setImageDimensions(null)
+
+    try {
+      setProgress(0.3)
+      const regexFindings = runRegexDetection(text)
+      setProgress(0.7)
+
+      const allFindings = [...regexFindings]
+      // No coordinate mapping for text — no image to annotate
+      const findingsWithIds = allFindings.map((f, index) => ({
+        ...f,
+        uniqueId: `${f.id}-${index}`,
+        bbox: null,
+        confidence: 0,
+      }))
+
+      const { calculateConfidence } = await import('./utils/confidence')
+      const withConfidence = findingsWithIds.map(f => ({
+        ...f,
+        confidence: calculateConfidence(f),
+      }))
+
+      setProgress(0.95)
+      setSourceLabel(sourceLabel)
+      setProgress(1)
+
+      await new Promise(resolve => setTimeout(resolve, 400))
+      setFindings(withConfidence)
+      setAppState(STATES.RESULTS)
+
+    } catch (err) {
+      console.error(err)
+      setError(err.message || 'Analysis failed. Please try again.')
+      setAppState(STATES.ERROR)
+    }
+  }
 
   function handleReset() {
     setAppState(STATES.IDLE)
@@ -89,6 +136,8 @@ export default function App() {
     setProgress(0)
     setError(null)
     setImageDimensions(null)
+    setSourceLabel(null)
+    setInputMode('screenshot')
   }
 
   return (
@@ -129,16 +178,50 @@ export default function App() {
                 OCR · Pattern Detection · AI Classification
               </div>
               <h1 className="text-4xl font-bold text-[#0F1117] mb-4 leading-tight tracking-tight">
-                Screenshot Security<br />Analysis
+                Credential Exposure<br />Detection
               </h1>
               <p className="text-[#6B7280] text-base leading-relaxed max-w-lg mx-auto">
-                Detect exposed API keys, credentials, and sensitive data in screenshots before you share them. Powered by OCR and AI classification.
+                Detect exposed API keys, credentials, and sensitive data across screenshots, config files, and git history.
               </p>
             </div>
 
-            <UploadZone onFileSelected={analyzeImage} />
+            {/* Input mode tabs */}
+            <div className="bg-white rounded-2xl shadow-sm border border-[#E5E7EB] overflow-hidden mb-4">
+              <div className="flex border-b border-[#E5E7EB]">
+                {[
+                  { id: 'screenshot', label: 'Screenshot', icon: '🖼' },
+                  { id: 'file', label: 'Config File', icon: '📄' },
+                  { id: 'git', label: 'Git Repository', icon: '⌥' },
+                ].map(tab => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setInputMode(tab.id)}
+                    className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium transition-all ${
+                      inputMode === tab.id
+                        ? 'text-[#0F1117] border-b-2 border-[#0F1117] bg-white'
+                        : 'text-[#9CA3AF] hover:text-[#6B7280]'
+                    }`}
+                  >
+                    <span>{tab.icon}</span>
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
 
-            <div className="mt-4 flex justify-center">
+              <div className="p-6">
+                {inputMode === 'screenshot' && (
+                  <UploadZone onFileSelected={analyzeImage} />
+                )}
+                {inputMode === 'file' && (
+                  <FileInputZone onTextReady={analyzeText} />
+                )}
+                {inputMode === 'git' && (
+                  <GitInputZone onTextReady={analyzeText} />
+                )}
+              </div>
+            </div>
+
+            <div className="flex justify-center mb-6">
               <button
                 onClick={() => setShowDemoModal(true)}
                 className="flex items-center gap-2 text-sm font-medium text-[#6B7280] hover:text-[#0F1117] transition-all group"
@@ -148,7 +231,7 @@ export default function App() {
               </button>
             </div>
 
-            <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {[
                 { label: 'API Keys', desc: 'AWS, Stripe, OpenAI, GitHub', color: '#DC2626', bg: '#FEF2F2' },
                 { label: 'Auth Tokens', desc: 'JWT, OAuth, Sessions', color: '#D97706', bg: '#FFFBEB' },
@@ -156,19 +239,14 @@ export default function App() {
                 { label: 'PII', desc: 'SSNs, cards, IPs', color: '#0284C7', bg: '#F0F9FF' },
               ].map(({ label, desc, color, bg }) => (
                 <div key={label} className="bg-white rounded-xl p-3 shadow-sm border border-[#E5E7EB]">
-                  <div
-                    className="text-xs font-semibold mb-1"
-                    style={{ color }}
-                  >
-                    {label}
-                  </div>
+                  <div className="text-xs font-semibold mb-1" style={{ color }}>{label}</div>
                   <div className="text-xs text-[#9CA3AF]">{desc}</div>
                 </div>
               ))}
             </div>
 
             <p className="text-center text-xs text-[#9CA3AF] mt-5">
-              🔒 Processed entirely in your browser — your screenshot never leaves your device
+              🔒 Processed entirely in your browser — your data never leaves your device
             </p>
           </div>
         )}
@@ -182,18 +260,25 @@ export default function App() {
 
         {/* RESULTS */}
         {appState === STATES.RESULTS && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className={imageFile ? 'grid grid-cols-1 lg:grid-cols-2 gap-6' : 'max-w-2xl mx-auto'}>
+            {imageFile && (
+              <div>
+                <h2 className="text-sm font-semibold text-[#6B7280] mb-3 uppercase tracking-wider">
+                  Annotated Screenshot
+                </h2>
+                <AnnotatedImage
+                  imageFile={imageFile}
+                  findings={findings}
+                  selectedFindingId={selectedFindingId}
+                />
+              </div>
+            )}
             <div>
-              <h2 className="text-sm font-semibold text-[#6B7280] mb-3 uppercase tracking-wider">
-                Annotated Screenshot
-              </h2>
-              <AnnotatedImage
-                imageFile={imageFile}
-                findings={findings}
-                selectedFindingId={selectedFindingId}
-              />
-            </div>
-            <div>
+              {sourceLabel && (
+                <p className="text-xs text-[#9CA3AF] mb-3 font-mono truncate">
+                  Source: {sourceLabel}
+                </p>
+              )}
               <h2 className="text-sm font-semibold text-[#6B7280] mb-3 uppercase tracking-wider">
                 Threat Report
               </h2>
