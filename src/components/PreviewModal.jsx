@@ -28,8 +28,11 @@ export default function PreviewModal({ mode, findings, redactFindings, summary, 
 
   async function handleDownloadRedacted() {
     const link = document.createElement('a')
+    const date = new Date()
+    const dateStr = date.toISOString().slice(0, 10)
+    const timeStr = date.toTimeString().slice(0, 5).replace(':', '-')
     link.href = redactedUrl
-    link.download = `redacted-screenshot-${Date.now()}.png`
+    link.download = `screenshield-redacted-${dateStr}-${timeStr}.png`
     link.click()
     onClose()
   }
