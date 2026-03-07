@@ -17,11 +17,33 @@ export default function FindingsPanel({ findings, selectedFindingId, onSelectFin
   const overallRisk = getOverallRisk(findings)
   const style = SEVERITY_STYLES[overallRisk] || SEVERITY_STYLES.clean
   const [modalMode, setModalMode] = useState(null)
+  const [severityFilter, setSeverityFilter] = useState('all')
+  const [typeFilter, setTypeFilter] = useState('all')
 
-  // Default all findings to included in redaction
   const [redactSet, setRedactSet] = useState(() =>
     new Set(findings.map(f => f.uniqueId))
   )
+
+  const TYPE_GROUPS = {
+    'API Keys': ['aws_access_key', 'aws_secret_key', 'stripe_secret', 'stripe_webhook', 'openai_key', 'github_token', 'github_token_bare', 'github_oauth', 'google_api', 'twilio_account', 'twilio_auth', 'slack_token', 'anthropic_key'],
+    'Auth Tokens': ['jwt_token', 'jwt_secret', 'ssh_private'],
+    'Credentials': ['db_connection', 'password_field'],
+    'PII': ['internal_ip', 'internal_url', 'internal_url_bare', 'email', 'ssn', 'credit_card'],
+  }
+
+  function getTypeGroup(findingId) {
+    for (const [group, ids] of Object.entries(TYPE_GROUPS)) {
+      if (ids.includes(findingId)) return group
+    }
+    return 'Other'
+  }
+
+  const filtered = sorted.filter(f => {
+    const severityMatch = severityFilter === 'all' || f.severity === severityFilter
+    const typeMatch = typeFilter === 'all' || getTypeGroup(f.id) === typeFilter
+    return severityMatch && typeMatch
+  })
+  
 
   function handleToggleRedact(uniqueId) {
     setRedactSet(prev => {
@@ -97,9 +119,55 @@ export default function FindingsPanel({ findings, selectedFindingId, onSelectFin
         </div>
       </div>
 
+      {/* Filters */}
+      <div className="flex gap-2 flex-wrap">
+        <select
+          value={severityFilter}
+          onChange={(e) => setSeverityFilter(e.target.value)}
+          className="text-xs border border-[#E5E7EB] rounded-lg px-2 py-1.5 text-[#6B7280] bg-white focus:outline-none focus:border-[#3B82F6] transition-all"
+        >
+          <option value="all">All Severities</option>
+          <option value="critical">Critical</option>
+          <option value="high">High</option>
+          <option value="medium">Medium</option>
+          <option value="low">Low</option>
+        </select>
+
+        <select
+          value={typeFilter}
+          onChange={(e) => setTypeFilter(e.target.value)}
+          className="text-xs border border-[#E5E7EB] rounded-lg px-2 py-1.5 text-[#6B7280] bg-white focus:outline-none focus:border-[#3B82F6] transition-all"
+        >
+          <option value="all">All Types</option>
+          <option value="API Keys">API Keys</option>
+          <option value="Auth Tokens">Auth Tokens</option>
+          <option value="Credentials">Credentials</option>
+          <option value="PII">PII</option>
+        </select>
+
+        {(severityFilter !== 'all' || typeFilter !== 'all') && (
+          <button
+            onClick={() => { setSeverityFilter('all'); setTypeFilter('all') }}
+            className="text-xs text-[#9CA3AF] hover:text-[#0F1117] transition-all"
+          >
+            Clear filters
+          </button>
+        )}
+
+        {(severityFilter !== 'all' || typeFilter !== 'all') && (
+          <span className="text-xs text-[#9CA3AF] ml-auto self-center">
+            {filtered.length} of {findings.length} shown
+          </span>
+        )}
+      </div>
+
       {/* Findings List */}
       <div className="space-y-2 max-h-[550px] overflow-y-auto">
-        {sorted.map((finding) => (
+        {filtered.length === 0 ? (
+          <div className="text-center py-8 text-sm text-[#9CA3AF]">
+            No findings match the current filters
+          </div>
+        ) : filtered.map((finding) => (
           <FindingCard
             key={finding.uniqueId}
             finding={finding}
