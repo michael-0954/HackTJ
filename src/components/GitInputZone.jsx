@@ -98,11 +98,12 @@ export default function UrlInputZone({ onTextReady }) {
 
       {/* Example URLs for demo */}
       <div className="border border-[#E5E7EB] rounded-xl p-3">
-        <p className="text-xs font-medium text-[#6B7280] mb-2">Try these examples:</p>
+        <p className="text-xs font-medium text-[#6B7280] mb-2">
+          Example — click to try:
+        </p>
         <div className="space-y-1">
           {[
-            'https://raw.githubusercontent.com/username/repo/main/.env.example',
-            'https://pastebin.com/raw/somekey',
+            'https://raw.githubusercontent.com/michael-0954/HackTJ/refs/heads/main/public/demo-config.txt',
           ].map(example => (
             <button
               key={example}
@@ -113,6 +114,9 @@ export default function UrlInputZone({ onTextReady }) {
             </button>
           ))}
         </div>
+        <p className="text-xs text-[#9CA3AF] mt-2">
+          Use raw text URLs for best results (e.g. raw.githubusercontent.com) — fetching rendered HTML may yield lower confidence scores
+        </p>
       </div>
     </div>
   )
