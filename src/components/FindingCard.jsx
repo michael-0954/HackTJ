@@ -52,7 +52,23 @@ export default function FindingCard({ finding, isSelected, onClick, redactEnable
         </p>
       </div>
 
-      {/* Remediation */}
+      {/* Confidence + Remediation */}
+      <div className="flex items-center gap-2 mb-2">
+        <div className="flex-1 bg-[#F5F6FA] rounded-full h-1">
+          <div
+            className="h-1 rounded-full transition-all"
+            style={{
+              width: `${finding.confidence || 0}%`,
+              backgroundColor: finding.confidence >= 90 ? '#DC2626'
+                : finding.confidence >= 75 ? '#D97706'
+                : '#9CA3AF'
+            }}
+          />
+        </div>
+        <span className="text-xs text-[#9CA3AF] shrink-0 font-mono">
+          {finding.confidence || 0}% confidence
+        </span>
+      </div>
       <p className="text-xs text-[#6B7280] leading-relaxed mb-3">
         {finding.remediation}
       </p>

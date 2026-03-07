@@ -59,9 +59,11 @@ export default function App() {
       const mappedFindings = mapFindingsToCoordinates(allFindings, words, fullText)
 
       setProgress(0.96)
+      const { calculateConfidence } = await import('./utils/confidence')
       const findingsWithIds = mappedFindings.map((f, index) => ({
         ...f,
         uniqueId: `${f.id}-${index}`,
+        confidence: calculateConfidence(f),
       }))
 
       setProgress(1)
