@@ -69,12 +69,14 @@ export default function FindingsPanel({ findings, selectedFindingId, onSelectFin
             >
               Export PDF
             </button>
-            <button
-              onClick={() => setModalMode('redact')}
-              className="text-xs font-medium px-3 py-1.5 rounded-lg border border-[#E5E7EB] bg-white hover:bg-[#F5F6FA] text-[#6B7280] hover:text-[#0F1117] transition-all"
-            >
-              Download Redacted
-            </button>
+            {imageFile && (
+              <button
+                onClick={() => setModalMode('redact')}
+                className="text-xs font-medium px-3 py-1.5 rounded-lg border border-[#E5E7EB] bg-white hover:bg-[#F5F6FA] text-[#6B7280] hover:text-[#0F1117] transition-all"
+              >
+                Download Redacted
+              </button>
+            )}
           </div>
         </div>
 

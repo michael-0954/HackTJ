@@ -115,7 +115,7 @@ export default function UrlInputZone({ onTextReady }) {
           ))}
         </div>
         <p className="text-xs text-[#9CA3AF] mt-2">
-          Use raw text URLs for best results (e.g. raw.githubusercontent.com) — fetching rendered HTML may yield lower confidence scores
+          Use raw text URLs for best results
         </p>
       </div>
     </div>

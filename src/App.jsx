@@ -210,7 +210,18 @@ export default function App() {
 
               <div className="p-6">
                 {inputMode === 'screenshot' && (
-                  <UploadZone onFileSelected={analyzeImage} />
+                  <div>
+                    <UploadZone onFileSelected={analyzeImage} />
+                    <div className="flex justify-center mt-4">
+                      <button
+                        onClick={() => setShowDemoModal(true)}
+                        className="flex items-center gap-2 text-sm font-medium text-[#6B7280] hover:text-[#0F1117] transition-all group"
+                      >
+                        <span className="w-6 h-6 rounded-full border border-[#E5E7EB] group-hover:border-[#0F1117] flex items-center justify-center text-xs transition-all">▶</span>
+                        Try a Demo
+                      </button>
+                    </div>
+                  </div>
                 )}
                 {inputMode === 'clipboard' && (
                   <ClipboardInputZone onTextReady={analyzeText} />
@@ -219,16 +230,6 @@ export default function App() {
                   <UrlInputZone onTextReady={analyzeText} />
                 )}
               </div>
-            </div>
-
-            <div className="flex justify-center mb-6">
-              <button
-                onClick={() => setShowDemoModal(true)}
-                className="flex items-center gap-2 text-sm font-medium text-[#6B7280] hover:text-[#0F1117] transition-all group"
-              >
-                <span className="w-6 h-6 rounded-full border border-[#E5E7EB] group-hover:border-[#0F1117] flex items-center justify-center text-xs transition-all">▶</span>
-                Try a Demo
-              </button>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
