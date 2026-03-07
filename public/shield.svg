@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <path d="M50 5 L90 20 L90 50 C90 72 72 88 50 95 C28 88 10 72 10 50 L10 20 Z" fill="#0F1117"/>
+  <path d="M35 50 L45 60 L65 40" stroke="white" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+```
+
+**Step 7 — Check `.env` file exists.** Make sure you have a `.env` file in the project root with:
+```
+VITE_CLAUDE_API_KEY=your-key-here

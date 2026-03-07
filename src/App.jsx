@@ -36,7 +36,7 @@ export default function App() {
       setCarouselDir('right')
       setCarouselKey(k => k + 1)
       setCarouselIndex(i => (i + 1) % 4)
-    }, 2000)
+    }, 3500)
     return () => clearInterval(interval)
   }, [])
 
@@ -65,11 +65,6 @@ export default function App() {
 
       setProgress(0.82)
       const regexFindings = runRegexDetection(fullText)
-      console.log('=== FULL OCR TEXT ===')
-      console.log(fullText)
-      console.log('=== RAW REGEX FINDINGS ===')
-      regexFindings.forEach(f => console.log(f.name, '|', JSON.stringify(f.matchedText)))
-
       setProgress(0.90)
       const allFindings = [...regexFindings]
       const mappedFindings = mapFindingsToCoordinates(allFindings, words, fullText)
@@ -155,18 +150,18 @@ export default function App() {
     <div className="min-h-screen bg-[#F5F6FA]">
       <style>{`
         @keyframes slideInRight {
-          from { opacity: 0; transform: translateX(20px); }
+          from { opacity: 0; transform: translateX(32px); }
           to { opacity: 1; transform: translateX(0); }
         }
         @keyframes slideInLeft {
-          from { opacity: 0; transform: translateX(-20px); }
+          from { opacity: 0; transform: translateX(-32px); }
           to { opacity: 1; transform: translateX(0); }
         }
         .slide-in-right {
-          animation: slideInRight 0.3s ease forwards;
+          animation: slideInRight 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
         }
         .slide-in-left {
-          animation: slideInLeft 0.3s ease forwards;
+          animation: slideInLeft 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
         }
       `}</style>
       {/* Navbar */}
@@ -208,7 +203,7 @@ export default function App() {
                 Credential Exposure<br />Detection
               </h1>
               <p className="text-[#6B7280] text-base leading-relaxed max-w-lg mx-auto">
-                Detect exposed API keys, credentials, and sensitive data across screenshots, config files, and git history.
+                Detect exposed API keys, credentials, and sensitive data across screenshots, clipboards, and web content.
               </p>
             </div>
 
@@ -301,22 +296,32 @@ export default function App() {
               return (
                 <div className="bg-white rounded-2xl shadow-sm border border-[#E5E7EB] overflow-hidden">
                   {/* Tab indicators */}
-                  <div className="flex border-b border-[#E5E7EB]">
+                  <div className="flex border-b border-[#E5E7EB] relative">
                     {items.map((t, i) => (
                       <button
                         key={t.label}
                         onClick={() => {
-                        setCarouselDir(i > carouselIndex ? 'right' : 'left')
-                        setCarouselKey(k => k + 1)
-                        setCarouselIndex(i)
-                      }}
-                        className="flex-1 py-2.5 text-xs font-medium transition-all"
+                          setCarouselDir(i > carouselIndex ? 'right' : 'left')
+                          setCarouselKey(k => k + 1)
+                          setCarouselIndex(i)
+                        }}
+                        className="flex-1 py-2.5 text-xs font-medium relative"
                         style={{
                           color: i === carouselIndex ? t.color : '#9CA3AF',
-                          borderBottom: i === carouselIndex ? `2px solid ${t.color}` : '2px solid transparent',
+                          transition: 'color 0.4s ease',
                         }}
                       >
                         {t.label}
+                        {/* Animated underline per tab */}
+                        <span
+                          className="absolute bottom-0 left-0 w-full h-0.5 rounded-full"
+                          style={{
+                            backgroundColor: t.color,
+                            transform: i === carouselIndex ? 'scaleX(1)' : 'scaleX(0)',
+                            transition: 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+                            transformOrigin: carouselDir === 'right' ? 'left' : 'right',
+                          }}
+                        />
                       </button>
                     ))}
                   </div>
