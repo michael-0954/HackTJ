@@ -1,8 +1,8 @@
 import { useState } from "react"
 import UploadZone from "./components/UploadZone"
 import DemoModal from "./components/DemoModal"
-import FileInputZone from "./components/FileInputZone"
-import GitInputZone from "./components/GitInputZone"
+import ClipboardInputZone from "./components/FileInputZone"
+import UrlInputZone from "./components/GitInputZone"
 import ScanAnimation from "./components/ScanAnimation"
 import AnnotatedImage from "./components/AnnotatedImage"
 import FindingsPanel from "./components/FindingsPanel"
@@ -190,8 +190,8 @@ export default function App() {
               <div className="flex border-b border-[#E5E7EB]">
                 {[
                   { id: 'screenshot', label: 'Screenshot', icon: '🖼' },
-                  { id: 'file', label: 'Config File', icon: '📄' },
-                  { id: 'git', label: 'Git Repository', icon: '⌥' },
+                  { id: 'clipboard', label: 'Clipboard', icon: '📋' },
+                  { id: 'url', label: 'URL', icon: '🌐' },
                 ].map(tab => (
                   <button
                     key={tab.id}
@@ -212,11 +212,11 @@ export default function App() {
                 {inputMode === 'screenshot' && (
                   <UploadZone onFileSelected={analyzeImage} />
                 )}
-                {inputMode === 'file' && (
-                  <FileInputZone onTextReady={analyzeText} />
+                {inputMode === 'clipboard' && (
+                  <ClipboardInputZone onTextReady={analyzeText} />
                 )}
-                {inputMode === 'git' && (
-                  <GitInputZone onTextReady={analyzeText} />
+                {inputMode === 'url' && (
+                  <UrlInputZone onTextReady={analyzeText} />
                 )}
               </div>
             </div>
