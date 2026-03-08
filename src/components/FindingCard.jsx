@@ -69,9 +69,15 @@ export default function FindingCard({ finding, isSelected, onClick, redactEnable
           {finding.confidence || 0}% confidence
         </span>
       </div>
-      <p className="text-xs text-[#6B7280] leading-relaxed mb-3">
-        {finding.remediation}
-      </p>
+      {finding.claudeNote && (
+            <div className="flex items-start gap-1.5 mb-2 bg-[#F0F9FF] rounded-lg px-2 py-1.5">
+              <span className="text-xs text-[#0284C7]">✦ AI:</span>
+              <p className="text-xs text-[#0284C7] leading-relaxed">{finding.claudeNote}</p>
+            </div>
+          )}
+          <p className="text-xs text-[#9CA3AF] leading-relaxed">
+            {finding.remediation}
+          </p>
 
       {/* Redaction toggle — only show when image is present */}
       {onToggleRedact && redactEnabled !== undefined && (

@@ -9,6 +9,7 @@ import FindingsPanel from "./components/FindingsPanel"
 import { extractTextWithCoordinates } from "./engine/ocr"
 import { runRegexDetection } from "./engine/regexDetector"
 import { mapFindingsToCoordinates } from "./engine/coordinator"
+import { classifyWithClaude } from "./engine/classifier"
 
 const STATES = {
   IDLE: 'idle',
@@ -97,10 +98,13 @@ export default function App() {
           confidence: calculateConfidence(f),
         }))
 
+        const withClaude = await classifyWithClaude(withConfidence, fullText)
+
         results.push({
+          ...results,
           imageFile: file,
           imageDimensions: dimensions,
-          findings: withConfidence,
+          findings: withClaude,
         })
 
         setProgress((i + 1) / files.length * 0.95)
@@ -151,12 +155,14 @@ export default function App() {
         confidence: calculateConfidence(f),
       }))
 
+      const withClaude = await classifyWithClaude(withConfidence, text)
+
       setProgress(0.95)
       setSourceLabel(sourceLabel)
       setProgress(1)
 
       await new Promise(resolve => setTimeout(resolve, 400))
-      setFindings(withConfidence)
+      setFindings(withClaude)
       setAppState(STATES.RESULTS)
 
     } catch (err) {
