@@ -196,17 +196,19 @@ export default function App() {
         {/* IDLE */}
         {appState === STATES.IDLE && (
           <div className="max-w-2xl mx-auto">
-            <div className="text-center mb-10">
-              <div className="inline-flex items-center bg-[#F0F9FF] text-[#0284C7] text-xs font-medium px-3 py-1.5 rounded-full mb-5">
-                OCR · Pattern Detection · AI Classification
+            {!isExtension && (
+              <div className="text-center mb-10">
+                <div className="inline-flex items-center bg-[#F0F9FF] text-[#0284C7] text-xs font-medium px-3 py-1.5 rounded-full mb-5">
+                  OCR · Pattern Detection · AI Classification
+                </div>
+                <h1 className="text-4xl font-bold text-[#0F1117] mb-4 leading-tight tracking-tight">
+                  Credential Exposure<br />Detection
+                </h1>
+                <p className="text-[#6B7280] text-base leading-relaxed max-w-lg mx-auto">
+                  Detect exposed API keys, credentials, and sensitive data across screenshots, config files, and git history.
+                </p>
               </div>
-              <h1 className="text-4xl font-bold text-[#0F1117] mb-4 leading-tight tracking-tight">
-                Credential Exposure<br />Detection
-              </h1>
-              <p className="text-[#6B7280] text-base leading-relaxed max-w-lg mx-auto">
-                Detect exposed API keys, credentials, and sensitive data across screenshots, clipboards, and web content.
-              </p>
-            </div>
+            )}
 
             {/* Input mode tabs */}
             <div className="bg-white rounded-2xl shadow-sm border border-[#E5E7EB] overflow-hidden mb-4">

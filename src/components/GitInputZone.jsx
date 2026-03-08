@@ -1,4 +1,5 @@
 import { useState } from "react"
+const isExtension = new URLSearchParams(window.location.search).get('ext') === '1'
 
 const CORS_PROXIES = [
   (url) => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
@@ -104,28 +105,29 @@ export default function UrlInputZone({ onTextReady }) {
         Only scans publicly accessible URLs — no authentication supported
       </p>
 
-      {/* Example URLs for demo */}
-      <div className="border border-[#E5E7EB] rounded-xl p-3">
-        <p className="text-xs font-medium text-[#6B7280] mb-2">
-          Example — click to try:
-        </p>
-        <div className="space-y-1">
-          {[
-            'https://raw.githubusercontent.com/michael-0954/HackTJ/main/public/demo-config.txt',
-          ].map(example => (
-            <button
-              key={example}
-              onClick={() => setUrl(example)}
-              className="block w-full text-left text-xs text-[#3B82F6] hover:text-[#2563EB] font-mono truncate"
-            >
-              {example}
-            </button>
-          ))}
+      {!isExtension && (
+        <div className="border border-[#E5E7EB] rounded-xl p-3">
+          <p className="text-xs font-medium text-[#6B7280] mb-2">
+            Example — click to try:
+          </p>
+          <div className="space-y-1">
+            {[
+              'https://raw.githubusercontent.com/michael-0954/HackTJ/main/public/demo-config.txt',
+            ].map(example => (
+              <button
+                key={example}
+                onClick={() => setUrl(example)}
+                className="block w-full text-left text-xs text-[#3B82F6] hover:text-[#2563EB] font-mono truncate"
+              >
+                {example}
+              </button>
+            ))}
+          </div>
+          <p className="text-xs text-[#9CA3AF] mt-2">
+            Only raw text URLs work — use raw.githubusercontent.com for GitHub files
+          </p>
         </div>
-        <p className="text-xs text-[#9CA3AF] mt-2">
-          Use raw text URLs for best results
-        </p>
-      </div>
+      )}
     </div>
   )
 }
