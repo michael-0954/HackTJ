@@ -112,6 +112,9 @@ async function runOCR(imageFile, onProgress) {
   const imageUrl = URL.createObjectURL(enhanced)
 
   const worker = await Tesseract.createWorker('eng', 1, {
+    workerPath: chrome.runtime.getURL('worker.min.js'),
+    corePath: chrome.runtime.getURL('tesseract-core-simd.wasm.js'),
+    langPath: 'https://tessdata.projectnaptha.com/4.0.0',
     logger: (m) => {
       if (m.status === 'recognizing text' && onProgress) {
         onProgress(0.1 + m.progress * 0.65)
