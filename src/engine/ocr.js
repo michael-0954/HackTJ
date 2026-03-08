@@ -1,5 +1,5 @@
 import { createWorker } from 'tesseract.js'
-
+const ENHANCE_SCALE = 2
 export async function extractTextWithCoordinates(imageFile, onProgress) {
   // Enhance image before OCR for better accuracy
   const enhancedFile = await enhanceImage(imageFile)
@@ -29,7 +29,7 @@ export async function extractTextWithCoordinates(imageFile, onProgress) {
 
 function enhanceImage(imageFile) {
   const factor = 1.5
-  const scale = 2
+  const scale = ENHANCE_SCALE
 
   return new Promise((resolve) => {
     const img = new Image()
@@ -88,10 +88,10 @@ function parseHOCR(hocr) {
         text,
         confidence: 90,
         bbox: {
-          x0: parseInt(bboxMatch[1]),
-          y0: parseInt(bboxMatch[2]),
-          x1: parseInt(bboxMatch[3]),
-          y1: parseInt(bboxMatch[4]),
+          x0: parseInt(bboxMatch[1]) / ENHANCE_SCALE,
+          y0: parseInt(bboxMatch[2]) / ENHANCE_SCALE,
+          x1: parseInt(bboxMatch[3]) / ENHANCE_SCALE,
+          y1: parseInt(bboxMatch[4]) / ENHANCE_SCALE,
         },
       })
     }
