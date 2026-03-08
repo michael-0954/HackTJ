@@ -44,27 +44,31 @@ function findBboxForMatch(matchedText, words) {
   let coveredChars = startWord.text.length
   let j = bestStartIdx + 1
 
-  while (j < words.length) {
+  while (j < words.length && coveredChars < totalChars * 0.8) {
     const w = words[j]
     if (!w || !w.text) { j++; continue }
 
-    // Hard stop at line boundary — never span to next line
-    if (w.bbox.y0 > startWord.bbox.y0 + 15) break
+    // Stop if we've moved to a new line
+    if (w.bbox.y0 > startWord.bbox.y0 + 40) break
 
     coveredChars += w.text.length
     x1 = Math.max(x1, w.bbox.x1)
     y0 = Math.min(y0, w.bbox.y0)
     y1 = Math.max(y1, w.bbox.y1)
     j++
-  }
 
-  // If box is too small, extend to end of line
-  if (x1 - x0 < 100) {
-    const restOfLine = words.slice(j).filter(w =>
-      Math.abs(w.bbox.y0 - startWord.bbox.y0) < 15
-    )
-    if (restOfLine.length > 0) {
-      x1 = Math.max(...restOfLine.map(w => w.bbox.x1))
+    // For URLs and connection strings, keep going until end of line
+    if (clean.includes('://')) {
+      while (j < words.length) {
+        const next = words[j]
+        if (!next || !next.text) { j++; continue }
+        // Strict single line only
+        if (next.bbox.y0 > startWord.bbox.y0 + 15) break
+        x1 = Math.max(x1, next.bbox.x1)
+        y1 = Math.max(y1, next.bbox.y1)
+        j++
+      }
+      break
     }
   }
 
