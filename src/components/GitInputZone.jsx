@@ -124,7 +124,7 @@ export default function UrlInputZone({ onTextReady }) {
             ))}
           </div>
           <p className="text-xs text-[#9CA3AF] mt-2">
-            Only raw text URLs work — use raw.githubusercontent.com for GitHub files
+            Use raw text URLs for best results
           </p>
         </div>
       )}
