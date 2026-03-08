@@ -27,7 +27,7 @@ export default function UploadZone({ onFileSelected }) {
   function handleDrop(e) {
     e.preventDefault()
     setIsDragging(false)
-    const files = Array.from(e.dataTransfer.files).filter(isValidFile)
+    const files = Array.from(e.dataTransfer.files).filter(validateFile)
     if (files.length === 0) {
       setError('Please upload image files (PNG, JPG, WEBP, GIF)')
     } else if (files.length === 1) {
@@ -66,7 +66,7 @@ export default function UploadZone({ onFileSelected }) {
           Max 20MB per file · Select multiple screenshots at once
         </p>
         <input
-          ref={fileInputRef}
+          ref={inputRef}
           type="file"
           accept="image/*"
           multiple
