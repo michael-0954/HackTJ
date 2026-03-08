@@ -73,7 +73,6 @@ export default function App() {
 
         const { fullText, words } = await extractTextWithCoordinates(file, (p) => {
           setProgress(((i + p) / files.length) * 0.75)
-          setStatusMessage(SCAN_MESSAGES[Math.floor(p * (SCAN_MESSAGES.length - 1))])
         })
 
         const regexFindings = runRegexDetection(fullText)
@@ -84,10 +83,7 @@ export default function App() {
           img.src = URL.createObjectURL(file)
         })
 
-        const mapped = regexFindings.map(f => ({
-          ...f,
-          bbox: mapFindingToCoords(f, words),
-        }))
+        const mapped = mapFindingsToCoordinates(regexFindings, words)
 
         const findingsWithIds = mapped.map((f, index) => ({
           ...f,
