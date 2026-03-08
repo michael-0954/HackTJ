@@ -57,7 +57,7 @@ export default function UploadZone({ onFileSelected }) {
           <span className="text-2xl">⬆</span>
         </div>
         <p className="font-semibold text-[#0F1117] mb-1">
-          Drop your screenshot here
+          Drop your screenshot(s) here
         </p>
         <p className="text-sm text-[#9CA3AF]">
           or click to browse — PNG, JPG, WEBP supported
