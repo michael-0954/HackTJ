@@ -31,6 +31,7 @@ export default function App() {
   const [carouselIndex, setCarouselIndex] = useState(0)
   const [carouselDir, setCarouselDir] = useState('right')
   const [carouselKey, setCarouselKey] = useState(0)
+  const isExtension = new URLSearchParams(window.location.search).get('ext') === '1'
   useEffect(() => {
     const interval = setInterval(() => {
       setCarouselDir('right')
@@ -234,15 +235,17 @@ export default function App() {
                 {inputMode === 'screenshot' && (
                   <div>
                     <UploadZone onFileSelected={analyzeImage} />
-                    <div className="flex justify-center mt-4">
-                      <button
-                        onClick={() => setShowDemoModal(true)}
-                        className="flex items-center gap-2 text-sm font-medium text-[#6B7280] hover:text-[#0F1117] transition-all group"
-                      >
-                        <span className="w-6 h-6 rounded-full border border-[#E5E7EB] group-hover:border-[#0F1117] flex items-center justify-center text-xs transition-all">▶</span>
-                        Try a Demo
-                      </button>
-                    </div>
+                    {!isExtension && (
+                      <div className="flex justify-center mt-4">
+                        <button
+                          onClick={() => setShowDemoModal(true)}
+                          className="flex items-center gap-2 text-sm font-medium text-[#6B7280] hover:text-[#0F1117] transition-all group"
+                        >
+                          <span className="w-6 h-6 rounded-full border border-[#E5E7EB] group-hover:border-[#0F1117] flex items-center justify-center text-xs transition-all">▶</span>
+                          Try a Demo
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
                 {inputMode === 'clipboard' && (
@@ -255,7 +258,7 @@ export default function App() {
             </div>
 
             {/* Carousel */}
-            {(() => {
+            {!isExtension && (() => {
               const items = [
                 {
                   label: 'API Keys',
@@ -382,9 +385,11 @@ export default function App() {
               )
             })()}
 
-            <p className="text-center text-xs text-[#9CA3AF] mt-4">
-              🔒 Processed entirely in your browser — your data never leaves your device
-            </p>
+            {!isExtension && (
+              <p className="text-center text-xs text-[#9CA3AF] mt-4">
+                🔒 Processed entirely in your browser — your data never leaves your device
+              </p>
+            )}
           </div>
         )}
 
