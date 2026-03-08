@@ -1,1 +1,1 @@
-# ScreenShield Chrome Extension
+# ScreenShield
