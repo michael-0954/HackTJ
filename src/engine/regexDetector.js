@@ -37,7 +37,7 @@ export const SECRET_PATTERNS = [
   {
     id: 'openai_key',
     name: 'OpenAI API Key',
-    regex: /sk-[a-zA-Z0-9\-]{20,}/g,
+    regex: /sk-[a-zA-Z0-9\-]{20,100}/g,
     severity: 'critical',
     remediation: 'Revoke immediately at platform.openai.com → API Keys. Check usage dashboard for unauthorized calls.',
   },
@@ -142,7 +142,7 @@ export const SECRET_PATTERNS = [
   {
     id: 'anthropic_key',
     name: 'Anthropic API Key',
-    regex: /sk-ant-[a-zA-Z0-9\-_]{32,}/g,
+    regex: /sk-ant-[a-zA-Z0-9\-_]{32,100}/g,
     severity: 'critical',
     remediation: 'Revoke immediately at console.anthropic.com → API Keys. Check usage for unauthorized Claude API calls.',
   },
