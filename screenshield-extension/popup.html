@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ScreenShield</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      width: 420px;
+      min-height: 300px;
+      max-height: 600px;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #F5F6FA;
+      color: #0F1117;
+      overflow-x: hidden;
+    }
+
+    /* Header */
+    .header {
+      background: white;
+      border-bottom: 1px solid #E5E7EB;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo {
+      width: 28px;
+      height: 28px;
+      background: #0F1117;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .logo svg { width: 16px; height: 16px; }
+
+    .header-text h1 {
+      font-size: 13px;
+      font-weight: 700;
+      color: #0F1117;
+    }
+
+    .header-text p {
+      font-size: 10px;
+      color: #9CA3AF;
+    }
+
+    /* Main content */
+    .content {
+      padding: 16px;
+    }
+
+    /* Upload zone */
+    .upload-zone {
+      border: 2px dashed #E5E7EB;
+      border-radius: 12px;
+      padding: 32px 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background: white;
+    }
+
+    .upload-zone:hover, .upload-zone.dragging {
+      border-color: #3B82F6;
+      background: #F8FAFF;
+    }
+
+    .upload-zone .icon {
+      font-size: 28px;
+      margin-bottom: 8px;
+    }
+
+    .upload-zone h2 {
+      font-size: 13px;
+      font-weight: 600;
+      color: #0F1117;
+      margin-bottom: 4px;
+    }
+
+    .upload-zone p {
+      font-size: 11px;
+      color: #9CA3AF;
+    }
+
+    .upload-zone input { display: none; }
+
+    /* Progress */
+    .progress-wrap {
+      background: white;
+      border-radius: 12px;
+      padding: 20px 16px;
+      text-align: center;
+    }
+
+    .progress-bar-bg {
+      height: 4px;
+      background: #F3F4F6;
+      border-radius: 99px;
+      overflow: hidden;
+      margin: 12px 0 8px;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: #0F1117;
+      border-radius: 99px;
+      transition: width 0.3s ease;
+      width: 0%;
+    }
+
+    .progress-label {
+      font-size: 11px;
+      color: #9CA3AF;
+    }
+
+    .progress-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #0F1117;
+    }
+
+    /* Results */
+    .results-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .results-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #6B7280;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .badge {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 99px;
+    }
+
+    .badge-critical { background: #FEF2F2; color: #DC2626; }
+    .badge-high { background: #FFFBEB; color: #D97706; }
+    .badge-medium { background: #FFFBEB; color: #D97706; }
+    .badge-low { background: #F0F9FF; color: #0284C7; }
+    .badge-none { background: #F0FDF4; color: #16A34A; }
+
+    .findings-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-height: 380px;
+      overflow-y: auto;
+    }
+
+    .finding-card {
+      background: white;
+      border: 1px solid #E5E7EB;
+      border-radius: 10px;
+      padding: 10px 12px;
+    }
+
+    .finding-card.critical { border-left: 3px solid #DC2626; }
+    .finding-card.high { border-left: 3px solid #D97706; }
+    .finding-card.medium { border-left: 3px solid #F59E0B; }
+    .finding-card.low { border-left: 3px solid #0284C7; }
+
+    .finding-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+
+    .finding-name {
+      font-size: 12px;
+      font-weight: 600;
+      color: #0F1117;
+    }
+
+    .finding-match {
+      font-size: 10px;
+      font-family: 'DM Mono', 'Courier New', monospace;
+      color: #6B7280;
+      background: #F5F6FA;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-bottom: 5px;
+      word-break: break-all;
+    }
+
+    .finding-remediation {
+      font-size: 10px;
+      color: #9CA3AF;
+      line-height: 1.4;
+    }
+
+    .no-findings {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      text-align: center;
+    }
+
+    .no-findings .check { font-size: 28px; margin-bottom: 8px; }
+    .no-findings h3 { font-size: 13px; font-weight: 600; color: #16A34A; margin-bottom: 4px; }
+    .no-findings p { font-size: 11px; color: #9CA3AF; }
+
+    .new-scan-btn {
+      width: 100%;
+      margin-top: 10px;
+      padding: 8px;
+      background: #0F1117;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .new-scan-btn:hover { background: #374151; }
+
+    .privacy-note {
+      font-size: 10px;
+      color: #9CA3AF;
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    .error-box {
+      background: #FEF2F2;
+      border: 1px solid #FECACA;
+      border-radius: 10px;
+      padding: 12px;
+      font-size: 11px;
+      color: #DC2626;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="logo">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2L20 5.5V11C20 15.4 16.4 19.4 12 21C7.6 19.4 4 15.4 4 11V5.5L12 2Z" fill="white"/>
+        <path d="M9 12L11 14L15 10" stroke="#0F1117" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div class="header-text">
+      <h1>ScreenShield</h1>
+      <p>Credential exposure detection</p>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="content" id="content">
+
+    <!-- IDLE STATE -->
+    <div id="state-idle">
+      <div class="upload-zone" id="upload-zone">
+        <input type="file" id="file-input" accept="image/*" />
+        <div class="icon">🖼</div>
+        <h2>Drop a screenshot here</h2>
+        <p>or click to browse — PNG, JPG, WEBP</p>
+      </div>
+      <p class="privacy-note">🔒 Processed entirely in your browser</p>
+    </div>
+
+    <!-- SCANNING STATE -->
+    <div id="state-scanning" style="display:none">
+      <div class="progress-wrap">
+        <p class="progress-title">Scanning...</p>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" id="progress-fill"></div>
+        </div>
+        <p class="progress-label" id="progress-label">Initializing...</p>
+      </div>
+    </div>
+
+    <!-- RESULTS STATE -->
+    <div id="state-results" style="display:none">
+      <div class="results-header">
+        <span class="results-title">Threat Report</span>
+        <span class="badge" id="overall-badge"></span>
+      </div>
+      <div class="findings-list" id="findings-list"></div>
+      <button class="new-scan-btn" id="new-scan-btn">← Scan Another</button>
+    </div>
+
+    <!-- ERROR STATE -->
+    <div id="state-error" style="display:none">
+      <div class="error-box" id="error-message"></div>
+      <button class="new-scan-btn" id="error-reset-btn" style="margin-top:10px">Try Again</button>
+    </div>
+
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>
