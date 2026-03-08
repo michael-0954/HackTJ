@@ -168,6 +168,39 @@ export const SECRET_PATTERNS = [
     remediation: 'Report immediately to your payment processor and compliance team. This may trigger PCI-DSS breach notification requirements.',
   },
 ]
+//claude 
+function luhnCheck(cardNumber) {
+  // Remove all spaces and dashes
+  const digits = cardNumber.replace(/[\s-]/g, '')
+  
+  // Must be all numbers
+  if (!/^\d+$/.test(digits)) return false
+  
+  // Must be between 13-19 digits
+  if (digits.length < 13 || digits.length > 19) return false
+  
+  // The actual Luhn algorithm
+  let sum = 0
+  let isEven = false
+  
+  // Walk through digits from right to left
+  for (let i = digits.length - 1; i >= 0; i--) {
+    let digit = parseInt(digits[i])
+    
+    if (isEven) {
+      digit *= 2          // double every second digit
+      if (digit > 9) {
+        digit -= 9        // if doubling gives 10+, subtract 9
+      }
+    }
+    
+    sum += digit
+    isEven = !isEven      // flip between even and odd position
+  }
+  
+  // Valid card numbers always have a sum divisible by 10
+  return sum % 10 === 0
+}
 
 function cleanOCRText(text) {
   return text
@@ -191,6 +224,11 @@ export function runRegexDetection(rawText) {
       // Use full match always for redaction accuracy
       const matchedText = match[0]
       if (matchedText.trim().length < 3) continue
+      
+      if (pattern.id === 'credit_card' && !luhnCheck(matchedText)) {
+        continue
+      }
+
       findings.push({
         id: pattern.id,
         name: pattern.name,
