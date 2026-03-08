@@ -25,6 +25,8 @@ export default function App() {
   const [progress, setProgress] = useState(0)
   const [error, setError] = useState(null)
   const [imageDimensions, setImageDimensions] = useState(null)
+  const [pages, setPages] = useState([]) // [{imageFile, imageDimensions, findings}]
+  const [currentPage, setCurrentPage] = useState(0)
   const [showDemoModal, setShowDemoModal] = useState(false)
   const [inputMode, setInputMode] = useState('screenshot')
   const [sourceLabel, setSourceLabel] = useState(null)
@@ -40,50 +42,83 @@ export default function App() {
     }, 3500)
     return () => clearInterval(interval)
   }, [])
-
-  async function analyzeImage(file) {
-    setImageFile(file)
-    setSourceLabel(file.name)
-    // Get natural dimensions
-    const url = URL.createObjectURL(file)
-    const img = new Image()
-    img.onload = () => {
-      setImageDimensions({ width: img.naturalWidth, height: img.naturalHeight })
-      URL.revokeObjectURL(url)
+  useEffect(() => {
+    if (pages.length > 0 && pages[currentPage]) {
+      setImageFile(pages[currentPage].imageFile)
+      setImageDimensions(pages[currentPage].imageDimensions)
+      setFindings(pages[currentPage].findings)
+      setSelectedFindingId(null)
     }
-    img.src = url
+  }, [currentPage, pages])
+
+  async function analyzeImage(fileOrFiles) {
+    const files = Array.isArray(fileOrFiles) ? fileOrFiles : [fileOrFiles]
+
     setAppState(STATES.SCANNING)
     setProgress(0)
     setFindings([])
     setSelectedFindingId(null)
+    setImageFile(null)
+    setImageDimensions(null)
+    setPages([])
+    setCurrentPage(0)
 
     try {
-      setProgress(0.05)
+      const results = []
 
-      const { fullText, words } = await extractTextWithCoordinates(file, (p) => {
-        setProgress(0.08 + p * 0.7)
-      })
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i]
 
-      setProgress(0.82)
-      const regexFindings = runRegexDetection(fullText)
-      setProgress(0.90)
-      const allFindings = [...regexFindings]
-      const mappedFindings = mapFindingsToCoordinates(allFindings, words, fullText)
+        setProgress((i / files.length) * 0.1)
 
-      setProgress(0.96)
-      const { calculateConfidence } = await import('./utils/confidence')
-      const findingsWithIds = mappedFindings.map((f, index) => ({
-        ...f,
-        uniqueId: `${f.id}-${index}`,
-        confidence: calculateConfidence(f),
-      }))
+        const { fullText, words } = await extractTextWithCoordinates(file, (p) => {
+          setProgress(((i + p) / files.length) * 0.75)
+          setStatusMessage(SCAN_MESSAGES[Math.floor(p * (SCAN_MESSAGES.length - 1))])
+        })
 
+        const regexFindings = runRegexDetection(fullText)
+
+        const dimensions = await new Promise((resolve) => {
+          const img = new Image()
+          img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight })
+          img.src = URL.createObjectURL(file)
+        })
+
+        const mapped = regexFindings.map(f => ({
+          ...f,
+          bbox: mapFindingToCoords(f, words),
+        }))
+
+        const findingsWithIds = mapped.map((f, index) => ({
+          ...f,
+          uniqueId: `page${i}-${f.id}-${index}`,
+          confidence: 0,
+        }))
+
+        const { calculateConfidence } = await import('./utils/confidence')
+        const withConfidence = findingsWithIds.map(f => ({
+          ...f,
+          confidence: calculateConfidence(f),
+        }))
+
+        results.push({
+          imageFile: file,
+          imageDimensions: dimensions,
+          findings: withConfidence,
+        })
+
+        setProgress((i + 1) / files.length * 0.95)
+      }
+
+      setPages(results)
+      setCurrentPage(0)
+      setImageFile(results[0].imageFile)
+      setImageDimensions(results[0].imageDimensions)
+      setFindings(results[0].findings)
+      setSourceLabel(null)
       setProgress(1)
 
-      // Small delay so user sees 100% before results appear
       await new Promise(resolve => setTimeout(resolve, 400))
-
-      setFindings(findingsWithIds)
       setAppState(STATES.RESULTS)
 
     } catch (err) {
@@ -145,6 +180,8 @@ export default function App() {
     setImageDimensions(null)
     setSourceLabel(null)
     setInputMode('screenshot')
+    setPages([])
+    setCurrentPage(0)
   }
 
   return (
@@ -404,6 +441,69 @@ export default function App() {
 
         {/* RESULTS */}
         {appState === STATES.RESULTS && (
+          <>
+          {/* Page navigator — only show for batch scans and not in extension */}
+          {pages.length > 1 && !isExtension && (
+            <div className="flex items-center gap-2 mb-4 bg-white rounded-xl border border-[#E5E7EB] p-3 shadow-sm">
+              <button
+                onClick={() => setCurrentPage(p => Math.max(0, p - 1))}
+                disabled={currentPage === 0}
+                className="w-7 h-7 rounded-lg border border-[#E5E7EB] flex items-center justify-center text-sm text-[#6B7280] hover:bg-[#F5F6FA] disabled:opacity-30 transition-all"
+              >
+                ←
+              </button>
+
+              <div className="flex gap-1.5 flex-1 justify-center flex-wrap">
+                {pages.map((page, i) => {
+                  const severity = page.findings.length
+                    ? page.findings.reduce((worst, f) => {
+                        const order = { critical: 0, high: 1, medium: 2, low: 3 }
+                        return order[f.severity] < order[worst] ? f.severity : worst
+                      }, 'low')
+                    : 'none'
+                  const colors = {
+                    critical: 'bg-[#DC2626] text-white',
+                    high: 'bg-[#D97706] text-white',
+                    medium: 'bg-[#F59E0B] text-white',
+                    low: 'bg-[#0284C7] text-white',
+                    none: 'bg-[#16A34A] text-white',
+                  }
+                  return (
+                    <button
+                      key={i}
+                      onClick={() => setCurrentPage(i)}
+                      className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all border ${
+                        i === currentPage
+                          ? 'border-[#0F1117] bg-[#0F1117] text-white'
+                          : 'border-[#E5E7EB] text-[#6B7280] hover:bg-[#F5F6FA]'
+                      }`}
+                    >
+                      <span className={`w-1.5 h-1.5 rounded-full ${i === currentPage ? 'bg-white' : colors[severity].split(' ')[0]}`} />
+                      {i + 1}
+                      {page.findings.length > 0 && (
+                        <span className={`text-xs px-1 py-0 rounded ${i === currentPage ? 'bg-white/20' : colors[severity]}`}>
+                          {page.findings.length}
+                        </span>
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+
+              <button
+                onClick={() => setCurrentPage(p => Math.min(pages.length - 1, p + 1))}
+                disabled={currentPage === pages.length - 1}
+                className="w-7 h-7 rounded-lg border border-[#E5E7EB] flex items-center justify-center text-sm text-[#6B7280] hover:bg-[#F5F6FA] disabled:opacity-30 transition-all"
+              >
+                →
+              </button>
+
+              <span className="text-xs text-[#9CA3AF] ml-1 shrink-0">
+                {pages.length} screenshots
+              </span>
+            </div>
+          )}
+
           <div className={imageFile ? 'grid grid-cols-1 lg:grid-cols-2 gap-6' : 'max-w-2xl mx-auto'}>
             {imageFile && (
               <div>
@@ -435,6 +535,7 @@ export default function App() {
               />
             </div>
           </div>
+          </>
         )}
 
         {/* ERROR */}

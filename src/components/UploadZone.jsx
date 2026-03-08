@@ -18,16 +18,23 @@ export default function UploadZone({ onFileSelected }) {
     return true
   }
 
-  function handleFile(file) {
-    setError(null)
-    if (validateFile(file)) onFileSelected(file)
+  function handleFileInput(e) {
+    const files = Array.from(e.target.files)
+    if (files.length === 1) onFileSelected(files[0])
+    else if (files.length > 1) onFileSelected(files)
   }
 
   function handleDrop(e) {
     e.preventDefault()
     setIsDragging(false)
-    const file = e.dataTransfer.files[0]
-    if (file) handleFile(file)
+    const files = Array.from(e.dataTransfer.files).filter(isValidFile)
+    if (files.length === 0) {
+      setError('Please upload image files (PNG, JPG, WEBP, GIF)')
+    } else if (files.length === 1) {
+      onFileSelected(files[0])
+    } else {
+      onFileSelected(files)
+    }
   }
 
   return (
@@ -55,15 +62,16 @@ export default function UploadZone({ onFileSelected }) {
         <p className="text-sm text-[#9CA3AF]">
           or click to browse — PNG, JPG, WEBP supported
         </p>
-        <p className="text-xs text-[#D1D5DB] mt-2">
-          Max 20MB · Processed entirely in your browser
+        <p className="text-[#9CA3AF] text-xs">
+          Max 20MB per file · Select multiple screenshots at once
         </p>
         <input
-          ref={inputRef}
+          ref={fileInputRef}
           type="file"
           accept="image/*"
-          onChange={(e) => { const f = e.target.files[0]; if (f) handleFile(f) }}
+          multiple
           className="hidden"
+          onChange={handleFileInput}
         />
       </div>
       {error && (
