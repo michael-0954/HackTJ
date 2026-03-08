@@ -4,6 +4,7 @@ export default function UploadZone({ onFileSelected }) {
   const [isDragging, setIsDragging] = useState(false)
   const [error, setError] = useState(null)
   const inputRef = useRef(null)
+  const isExtension = new URLSearchParams(window.location.search).get('ext') === '1'
 
   function validateFile(file) {
     const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/gif']
@@ -57,19 +58,21 @@ export default function UploadZone({ onFileSelected }) {
           <span className="text-2xl">⬆</span>
         </div>
         <p className="font-semibold text-[#0F1117] mb-1">
-          Drop your screenshot(s) here
+          {isExtension ? 'Drop your screenshot here' : 'Drop your screenshot(s) here'}
         </p>
         <p className="text-sm text-[#9CA3AF]">
           or click to browse — PNG, JPG, WEBP supported
         </p>
-        <p className="text-[#9CA3AF] text-xs">
-          Max 20MB per file · Select multiple screenshots at once
-        </p>
+        {!isExtension && (
+          <p className="text-[#9CA3AF] text-xs">
+            Max 20MB per file · Select multiple screenshots at once
+          </p>
+        )}
         <input
           ref={inputRef}
           type="file"
           accept="image/*"
-          multiple
+          multiple={!isExtension}
           className="hidden"
           onChange={handleFileInput}
         />
