@@ -27,48 +27,85 @@ export async function extractTextWithCoordinates(imageFile, onProgress) {
   return { fullText, words, lines: [] }
 }
 
+function blurCalc(imageData) {
+  const data = imageData.data
+  const height = imageData.height
+  const width = imageData.width
+
+  let sum = 0
+  let count = 0
+
+  for(let y = 1; y < height-1; y++){
+    for(let x = 1; x < width-1; x++){
+      const idx = (y * width + x) * 4
+      // Get grayscale value of current pixel and neighbors
+      const center = data[idx] * 0.3 + data[idx+1] * 0.59 + data[idx+2] * 0.11
+      const left = data[idx-4] * 0.3 + data[idx-3] * 0.59 + data[idx-2] * 0.11
+      const right = data[idx+4] * 0.3 + data[idx+5] * 0.59 + data[idx+6] * 0.11
+      const up = data[idx - width*4] * 0.3 + data[idx - width*4+1] * 0.59 + data[idx - width*4+2] * 0.11
+      const down = data[idx + width*4] * 0.3 + data[idx + width*4+1] * 0.59 + data[idx + width*4+2] * 0.11
+      
+      // Laplacian — measures how different center is from neighbors
+      const laplacian = Math.abs(4 * center - left - right - up - down)
+      sum += laplacian
+      count++
+    }
+  }
+  return sum / count //harper, lower = blurrier, like average
+}
+  
+
+  
+
+
 function enhanceImage(imageFile) {
-  const factor = 1.5
-  const scale = ENHANCE_SCALE
+    const factor = 1.5
+    const scale = ENHANCE_SCALE
 
-  return new Promise((resolve) => {
-    const img = new Image()
+    return new Promise((resolve, reject) => {
+      const img = new Image()
 
-    img.onload = () => {
-      const canvas = document.createElement('canvas')
-      const ctx = canvas.getContext('2d')
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        const ctx = canvas.getContext('2d')
 
-      // Scale up for better OCR resolution
-      canvas.width = img.width * scale
-      canvas.height = img.height * scale
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+        // Scale up for better OCR resolution
+        canvas.width = img.width * scale
+        canvas.height = img.height * scale
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
 
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
-      const data = imageData.data
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+            // blur check goes HERE - after imageData exists
+        const blurScore = blurCalc(imageData)
+        if (blurScore < 5) {
+        reject(new Error('Yeah, if you cannot read it, how am I supposed to?'))
+        return
+        }
+        const data = imageData.data
 
-      // Convert to grayscale and boost contrast
-      for (let x = 0; x < data.length; x += 4) {
-        // Weighted grayscale based on human vision perception
-        const gray = data[x] * 0.3 + data[x + 1] * 0.59 + data[x + 2] * 0.11
-        // Contrast enhancement
-        const newVal = Math.min(255, Math.max(0, (gray - 128) * factor + 128))
-        data[x] = newVal
-        data[x + 1] = newVal
-        data[x + 2] = newVal
-        // Alpha channel unchanged
+        // Convert to grayscale and boost contrast
+        for (let x = 0; x < data.length; x += 4) {
+          // Weighted grayscale based on human vision perception
+          const gray = data[x] * 0.3 + data[x + 1] * 0.59 + data[x + 2] * 0.11
+          // Contrast enhancement
+          const newVal = Math.min(255, Math.max(0, (gray - 128) * factor + 128))
+          data[x] = newVal
+          data[x + 1] = newVal
+          data[x + 2] = newVal
+          // Alpha channel unchanged
+        }
+
+        ctx.putImageData(imageData, 0, 0)
+
+        canvas.toBlob((blob) => {
+          URL.revokeObjectURL(img.src)
+          resolve(new File([blob], imageFile.name, { type: 'image/png' }))
+        })
       }
 
-      ctx.putImageData(imageData, 0, 0)
-
-      canvas.toBlob((blob) => {
-        URL.revokeObjectURL(img.src)
-        resolve(new File([blob], imageFile.name, { type: 'image/png' }))
-      })
-    }
-
-    img.src = URL.createObjectURL(imageFile)
-  })
-}
+      img.src = URL.createObjectURL(imageFile)
+    })
+  }
 
 function parseHOCR(hocr) {
   if (!hocr) return []
